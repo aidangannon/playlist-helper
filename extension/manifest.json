@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Playlist Extension",
+  "description": "An Extension to help scraping spotify and instagram",
+  "version": "1.0",
+  "content_scripts": [
+    {
+      "js": ["scripts/content.js"],
+      "matches": [
+        "https://developer.chrome.com/docs/extensions/*",
+        "https://developer.chrome.com/docs/webstore/*"
+      ]
+    }
+  ]
+}
