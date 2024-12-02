@@ -2,7 +2,6 @@ import json
 
 
 def lambda_handler(event, context):
-
     key_words = event['queryStringParameters']['keyWords']
 
     print(key_words)
