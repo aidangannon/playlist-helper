@@ -1,0 +1,135 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Spotify playlist searcher and filterer
+
+Resources:
+
+  Database:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: "playlisty-blob-db"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  PlaylistyRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: PlaylistyAppRoleLogsPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - logs:DescribeLogStreams
+                Resource: arn:aws:logs:*:*:*
+        - PolicyName: PlaylistyAppRoleSqsPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sqs:*
+                Resource: arn:aws:sqs:*:*:*
+        - PolicyName: PlaylistyAppRoleDbPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:*
+                Resource: !Sub arn:aws:s3:::${Database}*
+
+  PlaylistyHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins:
+          - "https://localhost:3000"
+          - "http://localhost:3000"
+        AllowHeaders:
+          - "*"
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+          - PATCH
+
+  PlaylistyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Environment:
+        Variables:
+          QUEUE_NAME: !GetAtt MyQueue.QueueName
+          S3_BUCKET_NAME: !Ref Database
+      MemorySize: 1024
+      CodeUri: ./
+      Handler: src/app.lambda_handler
+      Runtime: python3.10
+      Events:
+        RunPlaylist:
+          Type: HttpApi
+          Properties:
+            Auth:
+              Authorizer: UserAuth
+            Path: /playlist
+            Method: get
+            ApiId: !Ref PlaylistyHttpApi
+      Role: !GetAtt PlaylistyAppRole.Arn
+
+  PlaylistyApiGatewayInvoke:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt PlaylistyFunction.Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:*/*/*/
+
+  # TODO: Currently not used
+  LambdaFunctionEventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn: !GetAtt MyQueue.Arn
+      FunctionName: !GetAtt PlaylistyFunction.Arn
+
+  # TODO: Currently not used
+  MyQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join
+        - "-"
+        - - "playlisty-queue"
+          - !Select
+            - 0
+            - !Split
+              - "-"
+              - !Select
+                - 2
+                - !Split
+                  - "/"
+                  - !Ref "AWS::StackId"
+          - ".fifo"
+      VisibilityTimeout: 50
+      FifoQueue: true
+
+Outputs:
+  PlaylistyBaseUrl:
+    Description: "Base URL for Playlisty API"
+    Value: !Sub "https://${PlaylistyHttpApi}.execute-api.${AWS::Region}.amazonaws.com/"
