@@ -1,6 +1,14 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: Spotify playlist searcher and filterer
+Description: >
+  Spotify playlist searcher and filterer
+
+Globals:
+  Function:
+    Timeout: 50
+    Environment:
+      Variables:
+        ENVIRONMENT: PROD
 
 Resources:
 
