@@ -2,10 +2,10 @@ import json
 
 
 def lambda_handler(event, context):
-    key_words = event['queryStringParameters']['keyWords']
+    key_words_array = event['queryStringParameters']['keyWords'].split(',')
 
-    print(len(key_words))
-    for word in key_words:
+    print(len(key_words_array))
+    for word in key_words_array:
         print(word)
 
     return {
