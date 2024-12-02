@@ -1,14 +1,9 @@
 name: Manual Server Deploy
 
-on:
-  workflow_dispatch:
-    inputs:
-      name:
-        type: choice
-        description: env
-        options:
-        - staging
-        - prod
+on:  # Trigger events for the workflow
+  push:
+    branches:
+      - trunk
 
 jobs:
   deploy:
