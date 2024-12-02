@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  Spotify playlist searcher and filterer
+  Playlisty backend
 
 Globals:
   Function:
@@ -95,12 +95,11 @@ Resources:
         RunPlaylist:
           Type: HttpApi
           Properties:
-            Auth:
-              Authorizer: UserAuth
             Path: /playlist
             Method: get
             ApiId: !Ref PlaylistyHttpApi
-      Role: !GetAtt PlaylistyAppRole.Arn
+      Role: !GetAtt PlaylistyRole.Arn
+
 
   PlaylistyApiGatewayInvoke:
     Type: AWS::Lambda::Permission

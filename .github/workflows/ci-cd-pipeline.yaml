@@ -21,4 +21,5 @@ jobs:
         run: |
           echo "deploying to ${{ github.event.inputs.name }} environment"
           cd backend && sam build && cd .aws-sam/build/PlaylistyFunction && rm -fr samconfig.toml template.yaml requirements.txt && cd ../../..
+          sam validate
           sam deploy --no-fail-on-empty-changeset --no-confirm-changeset --stack-name playlisty-api --s3-bucket playlisty-api-s3 --s3-prefix playlisty --region eu-west-2 --capabilities CAPABILITY_IAM
