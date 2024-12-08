@@ -15,7 +15,7 @@ Password = str
 def lambda_handler(event, context):
     S3.put_object(Bucket=os.environ['S3_BUCKET_NAME'],
                                 Key='users/admin',
-                                Body={"password": event['queryStringParameters']['password']},
+                                Body=json.dumps({"password": event['queryStringParameters']['password']}),
                                 ContentType="application/json")
 
     print(f"EVENT: {event}")
