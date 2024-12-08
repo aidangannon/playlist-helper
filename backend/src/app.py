@@ -16,6 +16,7 @@ def lambda_handler(event, context):
     does_header_exist, username, password = get_username_and_password(event)
 
     if not does_header_exist:
+        print("Authorization header missing")
         return {
             'statusCode': 401,
             'body': json.dumps({
@@ -26,6 +27,7 @@ def lambda_handler(event, context):
     does_user_exist, admin = get_user(username)
 
     if not does_user_exist:
+        print("User does not exist")
         return {
             'statusCode': 401,
             'body': json.dumps({
@@ -34,6 +36,7 @@ def lambda_handler(event, context):
         }
 
     if admin['password'] != password:
+        print("Password is invalid")
         return {
             'statusCode': 401,
             'body': json.dumps({
@@ -88,5 +91,6 @@ def get_username_and_password(event) -> (bool, Username, Password):
 
     basic_key = authorization_header.split(" ")[1]
     decoded_credentials = base64.b64decode(basic_key).decode('utf-8')
+    print(f"decoded auth key {decoded_credentials}")
     username, password = decoded_credentials.split(":", 1)
     return True, username, password
