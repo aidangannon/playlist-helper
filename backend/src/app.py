@@ -1,12 +1,60 @@
 import json
 
+BUCKET_NAME = 'S3_BUCKET_NAME'
+
+S3 = boto3.client('s3')
+Username = str
+Password = str
+
 
 def lambda_handler(event, context):
+    does_header_exist, username, password = get_username_and_password(event)
+
+    if not does_header_exist:
+        return {
+            'statusCode': 401,
+            'body': json.dumps({
+                'message': f'Unauthorized'
+            })
+        }
+
+    does_user_exist, admin = get_user(username)
+
+    if not does_user_exist:
+        return {
+            'statusCode': 401,
+            'body': json.dumps({
+                'message': f'Unauthorized'
+            })
+        }
+
+    if admin['password'] != password:
+        return {
+            'statusCode': 401,
+            'body': json.dumps({
+                'message': f'Unauthorized'
+            })
+        }
+
+    if not 'queryStringParameters' in event:
+        return {
+            'statusCode': 400,
+            'body': json.dumps({
+                'message': 'keyWords parameter is required'
+            })
+        }
+
+    if not 'keyWords' in event['queryStringParameters']:
+        return {
+            'statusCode': 400,
+            'body': json.dumps({
+                'message': 'keyWords parameter is required'
+            })
+        }
+
     key_words_array = event['queryStringParameters']['keyWords'].split(',')
 
-    print(len(key_words_array))
-    for word in key_words_array:
-        print(word)
+    print(f'key words {key_words_array}')
 
     return {
         'statusCode': 200,
@@ -14,3 +62,26 @@ def lambda_handler(event, context):
             'message': 'this is a test'
         })
     }
+
+
+def get_user(username) -> (bool, dict):
+    try:
+        admin = S3.get_object(Bucket=os.environ[BUCKET_NAME],
+                              Key=f'users/{username}')['Body'].read()
+        return True, admin
+    except ClientError:
+        return False, {}
+
+
+def get_username_and_password(event) -> (bool, Username, Password):
+    authorization_header = event.get('headers', {}).get('Authorization')
+    header_not_found_response = (False, None, None)
+    if not authorization_header:
+        return header_not_found_response
+    if not authorization_header.startswith("Basic "):
+        return header_not_found_response
+
+    basic_key = authorization_header.split(" ")[1]
+    decoded_credentials = base64.b64decode(basic_key).decode('utf-8')
+    username, password = decoded_credentials.split(":", 1)
+    return True, username, password
