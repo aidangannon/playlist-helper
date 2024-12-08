@@ -1,4 +1,9 @@
+import base64
 import json
+import os
+
+import boto3
+from botocore.exceptions import ClientError
 
 BUCKET_NAME = 'S3_BUCKET_NAME'
 
