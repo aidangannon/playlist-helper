@@ -13,6 +13,8 @@ Password = str
 
 
 def lambda_handler(event, context):
+    print(f"EVENT: {event}")
+    print(f"CONTEXT: {context}")
     does_header_exist, username, password = get_username_and_password(event)
 
     if not does_header_exist:
