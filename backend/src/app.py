@@ -84,7 +84,7 @@ def get_user(username) -> (bool, dict):
 
 
 def get_username_and_password(event) -> (bool, Username, Password):
-    authorization_header = event.get('headers', {}).get('Authorization')
+    authorization_header = event.get('headers', {}).get('authorization')
     header_not_found_response = (False, None, None)
     if not authorization_header:
         return header_not_found_response
