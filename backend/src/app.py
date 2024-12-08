@@ -78,7 +78,7 @@ def get_user(username) -> (bool, dict):
     try:
         admin = S3.get_object(Bucket=os.environ[BUCKET_NAME],
                               Key=f'users/{username}')['Body'].read()
-        return True, json.dumps(admin)
+        return True, json.loads(admin)
     except ClientError:
         return False, {}
 
